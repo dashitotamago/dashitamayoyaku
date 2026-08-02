@@ -166,6 +166,13 @@
       <span id="saveStatus"></span>
     </div>
   </form>
+
+  <div style="margin-top:30px; padding-top:24px; border-top:2px dashed var(--ink);">
+    <h2 style="font-size:1.1rem; margin-bottom:10px;">LINE通知のテスト</h2>
+    <p class="hint" style="margin-bottom:10px;">ボタンを押すと、実際にLINEへテストメッセージを送信し、結果をここに表示します（ログを見に行く必要はありません）。</p>
+    <button type="button" class="save-btn" id="testLineBtn" style="background:var(--yolk); color:var(--ink);">LINE通知をテスト送信する</button>
+    <div id="testLineResult" style="margin-top:12px; font-size:.9rem; font-weight:700; display:none; padding:12px; border-radius:10px;"></div>
+  </div>
 </main>
 
 <script>
@@ -394,6 +401,40 @@ form.addEventListener('submit', async (e)=>{
     saveStatus.className = 'err';
   }finally{
     saveBtn.disabled = false;
+  }
+});
+
+document.getElementById('testLineBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('testLineBtn');
+  const resultEl = document.getElementById('testLineResult');
+  btn.disabled = true;
+  btn.textContent = '送信中…';
+  resultEl.style.display = 'none';
+
+  try{
+    if(!GAS_ENDPOINT){
+      throw new Error('GAS_ENDPOINTが未設定です。');
+    }
+    const res = await fetch(GAS_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({ type:'testline', passcode })
+    });
+    const json = await res.json();
+    resultEl.textContent = json.detail || (json.ok ? '送信しました。' : (json.error || '送信できませんでした。'));
+    resultEl.style.display = 'block';
+    resultEl.style.background = json.ok ? '#dff0d8' : '#f6d9d3';
+    resultEl.style.border = '2px solid ' + (json.ok ? '#3a6b2e' : 'var(--shudei)');
+    resultEl.style.color = json.ok ? '#2c5023' : 'var(--shudei)';
+  }catch(err){
+    resultEl.textContent = '送信できませんでした：' + err.message;
+    resultEl.style.display = 'block';
+    resultEl.style.background = '#f6d9d3';
+    resultEl.style.border = '2px solid var(--shudei)';
+    resultEl.style.color = 'var(--shudei)';
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'LINE通知をテスト送信する';
   }
 });
 </script>
