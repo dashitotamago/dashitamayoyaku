@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>出汁と卵｜管理画面（価格・営業時間の編集）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Antique+B1&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#241c15; --paper:#efe4c8; --paper-soft:#f7f1de;
+    --yolk:#f0a833; --shudei:#a63a26; --kiji:#8a5a34; --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Zen Kaku Gothic New',sans-serif; line-height:1.6;}
+  h1,h2{font-family:'Shippori Antique B1','Zen Kaku Gothic New',sans-serif; margin:0;}
+  :focus-visible{outline:3px solid var(--shudei); outline-offset:2px;}
+  header{
+    padding:18px clamp(16px,4vw,40px); border-bottom:2px solid var(--ink);
+    background:var(--paper-soft); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  }
+  header h1{font-size:1.4rem;}
+  header .sub{font-size:.8rem; opacity:.7;}
+  main{max-width:900px; margin:0 auto; padding:clamp(20px,4vw,40px);}
+
+  /* ---- passcode gate ---- */
+  #gate{max-width:420px; margin:80px auto; padding:28px; background:var(--paper-soft);
+    border:2px solid var(--ink); border-radius:var(--radius); box-shadow:6px 6px 0 var(--ink);}
+  #gate p{font-size:.88rem; opacity:.8;}
+  #gate input{width:100%; padding:12px; border:2px solid var(--ink); border-radius:10px; font-size:1rem; margin:10px 0;}
+  #gate button{width:100%; padding:12px; border:2px solid var(--ink); border-radius:999px; background:var(--shudei);
+    color:#fff8ee; font-weight:900; font-size:1rem; cursor:pointer;}
+  #gateError{color:var(--shudei); font-size:.85rem; font-weight:700; min-height:1.2em;}
+
+  #app{display:none;}
+  fieldset{border:2px solid var(--ink); border-radius:var(--radius); padding:18px 20px; margin:0 0 22px; background:var(--paper-soft);}
+  legend{font-weight:900; padding:0 6px;}
+  label{display:block; font-size:.82rem; font-weight:700; margin-bottom:5px;}
+  input[type=text],input[type=number],input[type=url],textarea{
+    width:100%; padding:9px 10px; border:2px solid var(--ink); border-radius:8px; font-size:.92rem; font-family:inherit; background:#fff;
+  }
+  .field{margin-bottom:14px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
+
+  .item-card{
+    border:2px dashed var(--ink); border-radius:12px; padding:16px; margin-bottom:16px; background:#fffaf0;
+    position:relative;
+  }
+  .item-card .del-btn{
+    position:absolute; top:10px; right:10px; background:none; border:2px solid var(--shudei); color:var(--shudei);
+    border-radius:8px; padding:4px 10px; font-size:.78rem; font-weight:700; cursor:pointer;
+  }
+  .opt-pair{display:grid; grid-template-columns:2fr 1fr; gap:10px; margin-bottom:8px;}
+  .add-btn{
+    display:inline-block; padding:10px 18px; border:2px solid var(--ink); border-radius:999px;
+    background:var(--yolk); font-weight:900; cursor:pointer; font-size:.9rem; margin-top:6px;
+  }
+  .preview-thumb{width:64px;height:64px;object-fit:cover;border:2px solid var(--ink);border-radius:8px;margin-top:6px;}
+
+  .save-bar{
+    position:sticky; bottom:0; background:var(--paper); padding:16px 0; border-top:2px solid var(--ink);
+    display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+  }
+  .save-btn{
+    padding:14px 28px; border:2px solid var(--ink); border-radius:999px; background:var(--shudei);
+    color:#fff8ee; font-weight:900; font-size:1rem; cursor:pointer; box-shadow:4px 4px 0 var(--ink);
+  }
+  .save-btn:disabled{opacity:.5; cursor:not-allowed;}
+  #saveStatus{font-size:.88rem; font-weight:700;}
+  #saveStatus.ok{color:#2c5023;}
+  #saveStatus.err{color:var(--shudei);}
+  .hint{font-size:.78rem; opacity:.65; margin-top:4px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>出汁と卵 管理画面</h1>
+    <div class="sub">価格・営業時間・メニュー画像などを編集できます</div>
+  </div>
+  <a href="index.html" style="font-size:.85rem; font-weight:700;">← 予約サイトを見る</a>
+</header>
+
+<div id="gate">
+  <h2 style="font-size:1.1rem; margin-bottom:8px;">パスコードを入力してください</h2>
+  <p>店舗の予約サイトの内容を変更できる画面です。パスコードはCode.gsのスクリプトプロパティ「ADMIN_PASSCODE」で設定したものを入力してください。</p>
+  <input type="text" id="passcodeInput" placeholder="パスコード" autocomplete="off">
+  <button id="gateBtn">開く</button>
+  <div id="gateError"></div>
+</div>
+
+<main id="app">
+  <form id="configForm">
+    <fieldset>
+      <legend>店舗情報</legend>
+      <div class="field">
+        <label for="f_address">住所・場所</label>
+        <input type="text" id="f_address">
+      </div>
+      <div class="field">
+        <label for="f_parking">駐車場についての一言</label>
+        <input type="text" id="f_parking">
+      </div>
+      <div class="field">
+        <label for="f_mapUrl">GoogleマップのURL（店舗）</label>
+        <input type="url" id="f_mapUrl">
+      </div>
+      <div class="field">
+        <label for="f_parkingMapUrl">GoogleマップのURL（駐車場）</label>
+        <input type="url" id="f_parkingMapUrl">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="f_hours">営業時間</label>
+          <input type="text" id="f_hours">
+        </div>
+        <div class="field">
+          <label for="f_closedDays">定休日</label>
+          <input type="text" id="f_closedDays">
+        </div>
+      </div>
+      <div class="field">
+        <label for="f_instagram">Instagramのユーザー名（@は不要）</label>
+        <input type="text" id="f_instagram">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>料金の設定</legend>
+      <div class="row2">
+        <div class="field">
+          <label for="f_packaging">テイクアウト包材代（円）</label>
+          <input type="number" id="f_packaging" min="0" step="10">
+        </div>
+        <div class="field">
+          <label for="f_threshold">サンド1個プレゼントになる金額（円）</label>
+          <input type="number" id="f_threshold" min="0" step="100">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>メニュー</legend>
+      <div id="menuItems"></div>
+      <button type="button" class="add-btn" id="addItemBtn">＋ メニューを追加</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>臨時休業日</legend>
+      <p class="hint" style="margin-top:0;">指定した日付は、予約サイトのフォームで選択できなくなります（天候による臨時休業などにご利用ください）。</p>
+      <div class="row2" style="align-items:end;">
+        <div class="field" style="margin-bottom:0;">
+          <label for="f_newClosedDate">休業日を追加</label>
+          <input type="date" id="f_newClosedDate">
+        </div>
+        <button type="button" class="add-btn" id="addClosedDateBtn" style="height:fit-content;">＋ 追加</button>
+      </div>
+      <div id="closedDatesList" style="margin-top:14px;"></div>
+    </fieldset>
+
+    <div class="save-bar">
+      <button type="submit" class="save-btn" id="saveBtn">この内容を保存する</button>
+      <span id="saveStatus"></span>
+    </div>
+  </form>
+</main>
+
+<script>
+// index.html と同じ GASウェブアプリのURLを貼り付けてください
+const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwnJaTn8eIwEPWtFEzqpXdpzWE7rR7y_-xBJLFrCnrRNQ1vnFJbTFB_zz79fnPvJqYezA/exec";
+
+const DEFAULT_CONFIG = {
+  hours: '11:00〜15:00（延長あり）',
+  closedDays: '定休日：平日の雨天日／猛暑日（8月除く）／荒天日',
+  address: '常滑 焼き物散歩道Aコース内',
+  parkingNote: '店前に駐車場があります。',
+  mapUrl: 'https://maps.app.goo.gl/6b3XyAfDmGD4qrkX7',
+  parkingMapUrl: 'https://maps.app.goo.gl/3aR4ghZadkgCv3c26?g_st=ic',
+  instagram: 'dashitoegg',
+  packagingFee: 50,
+  freeSandoThreshold: 3000,
+  closedDates: [],
+  menu: [
+    { id:'plain', name:'だし巻き卵サンド', price:600, priceExTax:560, swatch:'#f0a833',
+      desc:'まずはここから。ふわふわ卵の王道サンド',
+      options:[] },
+    { id:'mentaiko', name:'明太子だし巻き卵サンド', price:700, priceExTax:650, swatch:'#c1502e',
+      desc:'ピリ辛明太子と卵のコンビ', options:[] },
+    { id:'gyu', name:'牛しぐれだし巻き卵サンド', price:700, priceExTax:650, swatch:'#5a3a22',
+      desc:'甘辛牛しぐれ煮をたっぷりと', options:[{ label:'牛しぐれ増し +100円', price:100 }] },
+    { id:'salmon', name:'スモークサーモンだし巻き卵サンド', price:800, priceExTax:740, swatch:'#e8927c',
+      tag:'当店名物', desc:'', options:[{ label:'サーモン増し +100円', price:100 }] },
+    { id:'unagi', name:'うなぎだし巻き卵サンド', price:1000, priceExTax:930, swatch:'#7a4b27',
+      tag:'数量限定', desc:'', options:[] },
+  ]
+};
+
+let config = null;
+let passcode = '';
+
+const gate = document.getElementById('gate');
+const app = document.getElementById('app');
+const gateError = document.getElementById('gateError');
+
+document.getElementById('gateBtn').addEventListener('click', async ()=>{
+  passcode = document.getElementById('passcodeInput').value.trim();
+  if(!passcode){ gateError.textContent = 'パスコードを入力してください。'; return; }
+  gateError.textContent = '読み込み中…';
+  await loadConfig();
+  gate.style.display = 'none';
+  app.style.display = 'block';
+});
+
+async function loadConfig(){
+  if(!GAS_ENDPOINT){
+    config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+    return;
+  }
+  try{
+    const res = await fetch(GAS_ENDPOINT + '?action=config');
+    const remote = await res.json();
+    config = (remote && remote.menu) ? remote : JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  }catch(err){
+    config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  }
+  renderForm();
+}
+
+function renderForm(){
+  if(!Array.isArray(config.closedDates)) config.closedDates = [];
+  document.getElementById('f_address').value = config.address || '';
+  document.getElementById('f_parking').value = config.parkingNote || '';
+  document.getElementById('f_mapUrl').value = config.mapUrl || '';
+  document.getElementById('f_parkingMapUrl').value = config.parkingMapUrl || '';
+  document.getElementById('f_hours').value = config.hours || '';
+  document.getElementById('f_closedDays').value = config.closedDays || '';
+  document.getElementById('f_instagram').value = config.instagram || '';
+  document.getElementById('f_packaging').value = config.packagingFee ?? 0;
+  document.getElementById('f_threshold').value = config.freeSandoThreshold ?? 0;
+  renderMenuItems();
+  renderClosedDates();
+}
+
+const menuItemsEl = document.getElementById('menuItems');
+const closedDatesListEl = document.getElementById('closedDatesList');
+
+function renderClosedDates(){
+  const dates = [...config.closedDates].sort();
+  if(dates.length===0){
+    closedDatesListEl.innerHTML = '<p class="hint">現在、指定されている臨時休業日はありません。</p>';
+    return;
+  }
+  closedDatesListEl.innerHTML = dates.map(d=>`
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border:2px solid var(--ink); border-radius:8px; margin-bottom:8px; background:#fff;">
+      <span style="font-weight:700;">${d}</span>
+      <button type="button" class="del-btn" data-date="${d}" style="position:static;">削除</button>
+    </div>
+  `).join('');
+}
+
+document.getElementById('addClosedDateBtn').addEventListener('click', ()=>{
+  const input = document.getElementById('f_newClosedDate');
+  if(!input.value) return;
+  if(!config.closedDates.includes(input.value)){
+    config.closedDates.push(input.value);
+    renderClosedDates();
+  }
+  input.value = '';
+});
+
+closedDatesListEl.addEventListener('click', (e)=>{
+  const date = e.target.dataset.date;
+  if(date){
+    config.closedDates = config.closedDates.filter(d=>d!==date);
+    renderClosedDates();
+  }
+});
+
+function renderMenuItems(){
+  menuItemsEl.innerHTML = '';
+  config.menu.forEach((item, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'item-card';
+    card.dataset.idx = idx;
+    card.innerHTML = `
+      <button type="button" class="del-btn" data-action="del">削除</button>
+      <div class="row2">
+        <div class="field"><label>商品名</label><input type="text" class="f-name" value="${escapeHtml(item.name||'')}"></div>
+        <div class="field"><label>タグ（例：当店名物／数量限定／空欄でも可）</label><input type="text" class="f-tag" value="${escapeHtml(item.tag||'')}"></div>
+      </div>
+      <div class="row3">
+        <div class="field"><label>価格（税抜・円）</label><input type="number" class="f-priceex" min="0" step="10" value="${item.priceExTax||0}"></div>
+        <div class="field"><label>価格（税込・円）</label><input type="number" class="f-price" min="0" step="10" value="${item.price||0}"></div>
+        <div class="field"><label>スウォッチ色（画像が無い時の色見本）</label><input type="text" class="f-swatch" value="${item.swatch||'#f0a833'}"></div>
+      </div>
+      <div class="field"><label>説明文（任意）</label><input type="text" class="f-desc" value="${escapeHtml(item.desc||'')}"></div>
+      <div class="field">
+        <label>オプション（トッピングなど・最大2つ、空欄なら無し）</label>
+        <div class="opt-pair">
+          <input type="text" class="f-opt0-label" placeholder="例：明太子トッピング +100円" value="${escapeHtml((item.options&&item.options[0]&&item.options[0].label)||'')}">
+          <input type="number" class="f-opt0-price" placeholder="追加金額" min="0" step="10" value="${(item.options&&item.options[0]&&item.options[0].price)||''}">
+        </div>
+        <div class="opt-pair">
+          <input type="text" class="f-opt1-label" placeholder="例：サーモン増し +100円" value="${escapeHtml((item.options&&item.options[1]&&item.options[1].label)||'')}">
+          <input type="number" class="f-opt1-price" placeholder="追加金額" min="0" step="10" value="${(item.options&&item.options[1]&&item.options[1].price)||''}">
+        </div>
+      </div>
+    `;
+    menuItemsEl.appendChild(card);
+  });
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.getElementById('addItemBtn').addEventListener('click', ()=>{
+  config.menu.push({ id:'item_'+Date.now(), name:'', price:0, priceExTax:0, swatch:'#f0a833', tag:'', desc:'', options:[] });
+  renderMenuItems();
+});
+
+menuItemsEl.addEventListener('click', (e)=>{
+  if(e.target.dataset.action==='del'){
+    const idx = Number(e.target.closest('.item-card').dataset.idx);
+    config.menu.splice(idx,1);
+    renderMenuItems();
+  }
+});
+
+function collectFormIntoConfig(){
+  config.address = document.getElementById('f_address').value;
+  config.parkingNote = document.getElementById('f_parking').value;
+  config.mapUrl = document.getElementById('f_mapUrl').value;
+  config.parkingMapUrl = document.getElementById('f_parkingMapUrl').value;
+  config.hours = document.getElementById('f_hours').value;
+  config.closedDays = document.getElementById('f_closedDays').value;
+  config.instagram = document.getElementById('f_instagram').value.replace('@','').trim();
+  config.packagingFee = Number(document.getElementById('f_packaging').value)||0;
+  config.freeSandoThreshold = Number(document.getElementById('f_threshold').value)||0;
+
+  const cards = [...menuItemsEl.querySelectorAll('.item-card')];
+  config.menu = cards.map((card, idx)=>{
+    const existing = config.menu[idx] || {};
+    const opts = [];
+    const l0 = card.querySelector('.f-opt0-label').value.trim();
+    const p0 = card.querySelector('.f-opt0-price').value;
+    if(l0) opts.push({ label:l0, price:Number(p0)||0 });
+    const l1 = card.querySelector('.f-opt1-label').value.trim();
+    const p1 = card.querySelector('.f-opt1-price').value;
+    if(l1) opts.push({ label:l1, price:Number(p1)||0 });
+    return {
+      id: existing.id || ('item_'+idx+'_'+Date.now()),
+      name: card.querySelector('.f-name').value,
+      tag: card.querySelector('.f-tag').value,
+      price: Number(card.querySelector('.f-price').value)||0,
+      priceExTax: Number(card.querySelector('.f-priceex').value)||0,
+      swatch: card.querySelector('.f-swatch').value || '#f0a833',
+      desc: card.querySelector('.f-desc').value,
+      options: opts
+    };
+  });
+}
+
+const form = document.getElementById('configForm');
+const saveStatus = document.getElementById('saveStatus');
+const saveBtn = document.getElementById('saveBtn');
+
+form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  collectFormIntoConfig();
+  saveBtn.disabled = true;
+  saveStatus.textContent = '保存中…';
+  saveStatus.className = '';
+
+  try{
+    if(!GAS_ENDPOINT){
+      throw new Error('GAS_ENDPOINTが未設定です。Code.gsのデプロイURLを貼り付けてください。');
+    }
+    const res = await fetch(GAS_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({ type:'config', passcode, config })
+    });
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error || '保存に失敗しました');
+    saveStatus.textContent = '保存しました。予約サイトに反映されています。';
+    saveStatus.className = 'ok';
+    renderMenuItems();
+  }catch(err){
+    saveStatus.textContent = '保存できませんでした：' + err.message;
+    saveStatus.className = 'err';
+  }finally{
+    saveBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
