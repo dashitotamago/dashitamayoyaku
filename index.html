@@ -250,6 +250,8 @@
   <nav class="links">
     <a href="#menu">メニュー</a>
     <a href="#access">アクセス</a>
+    <a href="blog.html">ブログ</a>
+    <a href="#contact">お問い合わせ</a>
     <a href="#reserve">ご予約</a>
   </nav>
   <a class="cta-btn" href="#reserve">テイクアウトを予約する</a>
@@ -446,9 +448,44 @@
   </div>
 </section>
 
+<div class="slice-divider"></div>
+
+<section id="contact">
+  <div class="wrap">
+    <p class="eyebrow">CONTACT</p>
+    <h2 style="font-size:clamp(1.6rem,3vw,2.2rem);">お問い合わせ</h2>
+    <p style="max-width:56ch;">テイクアウト予約以外のご質問・ご相談は、こちらからお送りください。</p>
+
+    <div class="form-shell">
+      <form id="contactForm">
+        <div class="field">
+          <label for="c_company">会社名（任意）</label>
+          <input type="text" id="c_company" placeholder="例）株式会社〇〇">
+        </div>
+        <div class="field">
+          <label for="c_name">お名前</label>
+          <input type="text" id="c_name" required placeholder="例）常滑 太郎">
+        </div>
+        <div class="field">
+          <label for="c_contact">電話番号 または メールアドレス</label>
+          <input type="text" id="c_contact" required placeholder="例）090-1234-5678 / example@mail.com">
+        </div>
+        <div class="field">
+          <label for="c_message">お問い合わせ内容</label>
+          <textarea id="c_message" required placeholder="ご質問・ご相談の内容をご記入ください" style="min-height:140px;"></textarea>
+        </div>
+        <button type="submit" class="submit-btn" id="contactSubmitBtn">送信する</button>
+        <div class="status-msg" id="contactStatusMsg"></div>
+      </form>
+    </div>
+  </div>
+</section>
+
 <footer>
   出汁と卵｜常滑 焼き物散歩道Aコース内｜11:00–15:00（延長あり）<br>
-  <a href="https://www.instagram.com/dashitoegg/" target="_blank" rel="noopener">Instagram @dashitoegg</a>
+  <a href="https://www.instagram.com/dashitoegg/" target="_blank" rel="noopener">Instagram @dashitoegg</a> ・
+  <a href="blog.html">ブログ</a> ・
+  <a href="#contact">お問い合わせ</a>
 </footer>
 
 <script>
@@ -494,6 +531,7 @@ const DEFAULT_CONFIG = {
   packagingFee: 50,
   freeSandoThreshold: 3000,
   closedDates: [],
+  posts: [],
   menu: [
     { id:'plain', name:'だし巻き卵サンド', price:600, priceExTax:560, swatch:'#f0a833',
       desc:'まずはここから。ふわふわ卵の王道サンド',
@@ -1061,6 +1099,41 @@ document.getElementById('cancelBtn').addEventListener('click', async ()=>{
   }finally{
     cancelBtn.disabled = false;
     cancelBtn.textContent = 'この予約をキャンセルする';
+  }
+});
+
+/* ============ お問い合わせ ============ */
+const contactForm = document.getElementById('contactForm');
+const contactStatusMsg = document.getElementById('contactStatusMsg');
+const contactSubmitBtn = document.getElementById('contactSubmitBtn');
+
+contactForm.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  contactStatusMsg.style.display = 'none';
+  contactSubmitBtn.disabled = true;
+  contactSubmitBtn.textContent = '送信中…';
+
+  try{
+    if(!GAS_ENDPOINT){
+      throw new Error('店舗側の設定が完了していません（GAS_ENDPOINT未設定）');
+    }
+    const json = await postToGAS({
+      type: 'contact',
+      company: document.getElementById('c_company').value,
+      name: document.getElementById('c_name').value,
+      contact: document.getElementById('c_contact').value,
+      message: document.getElementById('c_message').value
+    });
+    if(!json.ok) throw new Error(json.error || '送信に失敗しました');
+    contactStatusMsg.textContent = 'お問い合わせを送信しました。ご返信までしばらくお待ちください。';
+    contactStatusMsg.className = 'status-msg ok';
+    contactForm.reset();
+  }catch(err){
+    contactStatusMsg.textContent = '送信できませんでした：' + err.message;
+    contactStatusMsg.className = 'status-msg err';
+  }finally{
+    contactSubmitBtn.disabled = false;
+    contactSubmitBtn.textContent = '送信する';
   }
 });
 </script>
