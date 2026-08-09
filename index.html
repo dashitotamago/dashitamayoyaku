@@ -251,7 +251,7 @@
     <a href="#menu">メニュー</a>
     <a href="#access">アクセス</a>
     <a href="blog.html">ブログ</a>
-    <a href="#contact">お問い合わせ</a>
+    <a href="#contact">お問い合わせ・求人</a>
     <a href="#reserve">ご予約</a>
   </nav>
   <a class="cta-btn" href="#reserve">テイクアウトを予約する</a>
@@ -453,14 +453,14 @@
 <section id="contact">
   <div class="wrap">
     <p class="eyebrow">CONTACT</p>
-    <h2 style="font-size:clamp(1.6rem,3vw,2.2rem);">お問い合わせ</h2>
-    <p style="max-width:56ch;">テイクアウト予約以外のご質問・ご相談は、こちらからお送りください。</p>
+    <h2 style="font-size:clamp(1.6rem,3vw,2.2rem);">お問い合わせ・求人応募</h2>
+    <p style="max-width:56ch;">テイクアウト予約以外のご質問のほか、求人へのご応募もこちらから承っております。</p>
 
     <div class="form-shell">
       <form id="contactForm">
         <div class="field">
-          <label for="c_company">会社名（任意）</label>
-          <input type="text" id="c_company" placeholder="例）株式会社〇〇">
+          <label for="c_company">会社名・学校名（任意）</label>
+          <input type="text" id="c_company" placeholder="例）株式会社〇〇 / 〇〇高等学校">
         </div>
         <div class="field">
           <label for="c_name">お名前</label>
@@ -471,8 +471,8 @@
           <input type="text" id="c_contact" required placeholder="例）090-1234-5678 / example@mail.com">
         </div>
         <div class="field">
-          <label for="c_message">お問い合わせ内容</label>
-          <textarea id="c_message" required placeholder="ご質問・ご相談の内容をご記入ください" style="min-height:140px;"></textarea>
+          <label for="c_message">お問い合わせ内容・質問</label>
+          <textarea id="c_message" required placeholder="お問い合わせ内容、または求人応募の旨・質問などをご記入ください" style="min-height:140px;"></textarea>
         </div>
         <button type="submit" class="submit-btn" id="contactSubmitBtn">送信する</button>
         <div class="status-msg" id="contactStatusMsg"></div>
@@ -485,7 +485,7 @@
   出汁と卵｜常滑 焼き物散歩道Aコース内｜11:00–15:00（延長あり）<br>
   <a href="https://www.instagram.com/dashitoegg/" target="_blank" rel="noopener">Instagram @dashitoegg</a> ・
   <a href="blog.html">ブログ</a> ・
-  <a href="#contact">お問い合わせ</a>
+  <a href="#contact">お問い合わせ・求人</a>
 </footer>
 
 <script>
@@ -595,13 +595,14 @@ function renderTimeSlots(){
   pickupDateEl.min = `${yyyy}-${mm}-${dd}`;
   pickupDateEl.value = `${yyyy}-${mm}-${dd}`;
   pickupTimeEl.innerHTML = '';
+  // 営業時間(11:00-15:00)の前後15分は受け取り不可（11:15〜14:45のみ選択可）
   const slots = [];
   for(let h=11; h<=14; h++){
     for(let m=0; m<60; m+=15){
+      if(h===11 && m===0) continue; // 開店直後15分は除外
       slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
     }
   }
-  slots.push('15:00');
   slots.forEach(t=>{
     const opt = document.createElement('option');
     opt.value = t; opt.textContent = t;
@@ -827,13 +828,14 @@ const mOrderLines = document.getElementById('m_orderLines');
 function renderManageTimeSlots(){
   mPickupDateEl.min = `${yyyy}-${mm}-${dd}`;
   mPickupTimeEl.innerHTML = '';
+  // 営業時間(11:00-15:00)の前後15分は受け取り不可（11:15〜14:45のみ選択可）
   const slots = [];
   for(let h=11; h<=14; h++){
     for(let m=0; m<60; m+=15){
+      if(h===11 && m===0) continue; // 開店直後15分は除外
       slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
     }
   }
-  slots.push('15:00');
   slots.forEach(t=>{
     const opt = document.createElement('option');
     opt.value = t; opt.textContent = t;
