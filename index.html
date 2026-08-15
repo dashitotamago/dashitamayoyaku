@@ -530,6 +530,7 @@ const DEFAULT_CONFIG = {
   instagram: 'dashitoegg',
   packagingFee: 50,
   freeSandoThreshold: 3000,
+  minLeadMinutes: 30,
   closedDates: [],
   posts: [],
   menu: [
@@ -591,19 +592,29 @@ function renderMenu(){
 }
 
 /* ============ 受け取り日時 ============ */
-function renderTimeSlots(){
-  pickupDateEl.min = `${yyyy}-${mm}-${dd}`;
-  pickupDateEl.value = `${yyyy}-${mm}-${dd}`;
-  pickupTimeEl.innerHTML = '';
-  // 営業時間(11:00-15:00)の前後15分は受け取り不可（11:15〜14:45のみ選択可）
+// 指定日の受け取り可能時間の一覧を返す。当日の場合は「現在時刻＋リードタイム」より前の枠を除外する。
+function buildAvailableSlots(pickupDateStr){
   const slots = [];
   for(let h=11; h<=14; h++){
     for(let m=0; m<60; m+=15){
       if(h===11 && m===0) continue; // 開店直後15分は除外
-      slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+      slots.push({ h, m, label: `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}` });
     }
   }
-  slots.forEach(t=>{
+  const todayStr = `${yyyy}-${mm}-${dd}`;
+  if(pickupDateStr === todayStr){
+    const now = new Date();
+    const cutoff = now.getHours()*60 + now.getMinutes() + (CONFIG.minLeadMinutes ?? 30);
+    return slots.filter(s => (s.h*60+s.m) >= cutoff).map(s=>s.label);
+  }
+  return slots.map(s=>s.label);
+}
+
+function renderTimeSlots(){
+  pickupDateEl.min = `${yyyy}-${mm}-${dd}`;
+  pickupDateEl.value = `${yyyy}-${mm}-${dd}`;
+  pickupTimeEl.innerHTML = '';
+  buildAvailableSlots(pickupDateEl.value).forEach(t=>{
     const opt = document.createElement('option');
     opt.value = t; opt.textContent = t;
     pickupTimeEl.appendChild(opt);
@@ -623,9 +634,23 @@ function updateClosedDateWarning(){
 }
 
 pickupDateEl.addEventListener('change', ()=>{
+  renderTimeSlotsForDate();
   updateClosedDateWarning();
   recalc();
 });
+
+// renderTimeSlotsは初期化時に日付もリセットしてしまうため、日付変更時はこちらで時間枠だけ再生成する
+function renderTimeSlotsForDate(){
+  const keep = pickupTimeEl.value;
+  pickupTimeEl.innerHTML = '';
+  const slots = buildAvailableSlots(pickupDateEl.value);
+  slots.forEach(t=>{
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    pickupTimeEl.appendChild(opt);
+  });
+  if(slots.includes(keep)) pickupTimeEl.value = keep;
+}
 
 /* ============ 注文行の描画 ============ */
 function renderOrderLines(){
@@ -825,18 +850,10 @@ const mPickupDateEl = document.getElementById('m_pickupDate');
 const mPickupTimeEl = document.getElementById('m_pickupTime');
 const mOrderLines = document.getElementById('m_orderLines');
 
-function renderManageTimeSlots(){
+function renderManageTimeSlots(pickupDateStr){
   mPickupDateEl.min = `${yyyy}-${mm}-${dd}`;
   mPickupTimeEl.innerHTML = '';
-  // 営業時間(11:00-15:00)の前後15分は受け取り不可（11:15〜14:45のみ選択可）
-  const slots = [];
-  for(let h=11; h<=14; h++){
-    for(let m=0; m<60; m+=15){
-      if(h===11 && m===0) continue; // 開店直後15分は除外
-      slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
-    }
-  }
-  slots.forEach(t=>{
+  buildAvailableSlots(pickupDateStr || mPickupDateEl.value).forEach(t=>{
     const opt = document.createElement('option');
     opt.value = t; opt.textContent = t;
     mPickupTimeEl.appendChild(opt);
@@ -851,7 +868,19 @@ function updateManageClosedWarning(){
   document.getElementById('m_closedDateWarning').style.display = closed ? 'block' : 'none';
   return closed;
 }
-mPickupDateEl.addEventListener('change', ()=>{ updateManageClosedWarning(); manageRecalc(); });
+mPickupDateEl.addEventListener('change', ()=>{
+  const keep = mPickupTimeEl.value;
+  mPickupTimeEl.innerHTML = '';
+  const slots = buildAvailableSlots(mPickupDateEl.value);
+  slots.forEach(t=>{
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    mPickupTimeEl.appendChild(opt);
+  });
+  if(slots.includes(keep)) mPickupTimeEl.value = keep;
+  updateManageClosedWarning();
+  manageRecalc();
+});
 
 function renderManageOrderLines(prefill){
   mOrderLines.innerHTML = '';
@@ -1007,8 +1036,8 @@ function openReservationForEdit(reservation){
   reservationListEl.style.display = 'none';
   lookupStatus.style.display = 'none';
 
-  renderManageTimeSlots();
   mPickupDateEl.value = reservation.pickupDate;
+  renderManageTimeSlots(reservation.pickupDate);
   mPickupTimeEl.value = reservation.pickupTime;
   document.getElementById('m_email').value = reservation.email || '';
   document.getElementById('m_notes').value = reservation.notes || '';
