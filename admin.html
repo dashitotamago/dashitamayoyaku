@@ -143,6 +143,15 @@
     </fieldset>
 
     <fieldset>
+      <legend>予約の受け取り時間</legend>
+      <div class="field">
+        <label for="f_leadtime">注文から受け取りまでの最短時間（分）</label>
+        <input type="number" id="f_leadtime" min="0" step="5">
+        <p class="hint">当日ご注文の場合、この時間より近い受け取り枠は選べなくなります（例：30なら、今から30分後以降の枠のみ選択可）。</p>
+      </div>
+    </fieldset>
+
+    <fieldset>
       <legend>メニュー</legend>
       <div id="menuItems"></div>
       <button type="button" class="add-btn" id="addItemBtn">＋ メニューを追加</button>
@@ -159,6 +168,13 @@
         <button type="button" class="add-btn" id="addClosedDateBtn" style="height:fit-content;">＋ 追加</button>
       </div>
       <div id="closedDatesList" style="margin-top:14px;"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>ブログ記事</legend>
+      <p class="hint" style="margin-top:0;">SEO対策用のブログです。ここで追加・編集した記事は、公開中のblog.htmlに反映されます。</p>
+      <div id="postItems"></div>
+      <button type="button" class="add-btn" id="addPostBtn">＋ 記事を追加</button>
     </fieldset>
 
     <div class="save-bar">
@@ -214,7 +230,9 @@ const DEFAULT_CONFIG = {
   instagram: 'dashitoegg',
   packagingFee: 50,
   freeSandoThreshold: 3000,
+  minLeadMinutes: 30,
   closedDates: [],
+  posts: [],
   menu: [
     { id:'plain', name:'だし巻き卵サンド', price:600, priceExTax:560, swatch:'#f0a833',
       desc:'まずはここから。ふわふわ卵の王道サンド',
@@ -263,6 +281,7 @@ async function loadConfig(){
 
 function renderForm(){
   if(!Array.isArray(config.closedDates)) config.closedDates = [];
+  if(!Array.isArray(config.posts)) config.posts = [];
   document.getElementById('f_address').value = config.address || '';
   document.getElementById('f_parking').value = config.parkingNote || '';
   document.getElementById('f_mapUrl').value = config.mapUrl || '';
@@ -272,8 +291,10 @@ function renderForm(){
   document.getElementById('f_instagram').value = config.instagram || '';
   document.getElementById('f_packaging').value = config.packagingFee ?? 0;
   document.getElementById('f_threshold').value = config.freeSandoThreshold ?? 0;
+  document.getElementById('f_leadtime').value = config.minLeadMinutes ?? 30;
   renderMenuItems();
   renderClosedDates();
+  renderPosts();
 }
 
 const menuItemsEl = document.getElementById('menuItems');
@@ -310,6 +331,58 @@ closedDatesListEl.addEventListener('click', (e)=>{
     renderClosedDates();
   }
 });
+
+/* ---- ブログ記事 ---- */
+const postItemsEl = document.getElementById('postItems');
+
+function renderPosts(){
+  postItemsEl.innerHTML = '';
+  const posts = [...config.posts].sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+  posts.forEach(post=>{
+    const idx = config.posts.indexOf(post);
+    const card = document.createElement('div');
+    card.className = 'item-card';
+    card.dataset.idx = idx;
+    card.innerHTML = `
+      <button type="button" class="del-btn" data-action="delpost">削除</button>
+      <div class="row2">
+        <div class="field"><label>タイトル</label><input type="text" class="p-title" value="${escapeHtml(post.title||'')}"></div>
+        <div class="field"><label>日付</label><input type="date" class="p-date" value="${post.date||''}"></div>
+      </div>
+      <div class="field"><label>画像URL（任意）</label><input type="url" class="p-image" value="${post.image||''}" placeholder="https://..."></div>
+      <div class="field"><label>本文</label><textarea class="p-body" style="min-height:120px;">${escapeHtml(post.body||'')}</textarea></div>
+    `;
+    postItemsEl.appendChild(card);
+  });
+}
+
+document.getElementById('addPostBtn').addEventListener('click', ()=>{
+  config.posts.push({ id:'post_'+Date.now(), title:'', date:new Date().toISOString().slice(0,10), image:'', body:'' });
+  renderPosts();
+});
+
+postItemsEl.addEventListener('click', (e)=>{
+  if(e.target.dataset.action==='delpost'){
+    const idx = Number(e.target.closest('.item-card').dataset.idx);
+    config.posts.splice(idx,1);
+    renderPosts();
+  }
+});
+
+function collectPostsIntoConfig(){
+  const cards = [...postItemsEl.querySelectorAll('.item-card')];
+  config.posts = cards.map((card, i)=>{
+    const idx = Number(card.dataset.idx);
+    const existing = config.posts[idx] || {};
+    return {
+      id: existing.id || ('post_'+Date.now()+'_'+i),
+      title: card.querySelector('.p-title').value,
+      date: card.querySelector('.p-date').value,
+      image: card.querySelector('.p-image').value,
+      body: card.querySelector('.p-body').value
+    };
+  });
+}
 
 function renderMenuItems(){
   menuItemsEl.innerHTML = '';
@@ -372,6 +445,7 @@ function collectFormIntoConfig(){
   config.instagram = document.getElementById('f_instagram').value.replace('@','').trim();
   config.packagingFee = Number(document.getElementById('f_packaging').value)||0;
   config.freeSandoThreshold = Number(document.getElementById('f_threshold').value)||0;
+  config.minLeadMinutes = Number(document.getElementById('f_leadtime').value)||0;
 
   const cards = [...menuItemsEl.querySelectorAll('.item-card')];
   config.menu = cards.map((card, idx)=>{
@@ -403,6 +477,7 @@ const saveBtn = document.getElementById('saveBtn');
 form.addEventListener('submit', async (e)=>{
   e.preventDefault();
   collectFormIntoConfig();
+  collectPostsIntoConfig();
   saveBtn.disabled = true;
   saveStatus.textContent = '保存中…';
   saveStatus.className = '';
