@@ -250,7 +250,6 @@
   <nav class="links">
     <a href="#menu">メニュー</a>
     <a href="#access">アクセス</a>
-    <a href="blog.html">ブログ</a>
     <a href="#contact">お問い合わせ・求人</a>
     <a href="#reserve">ご予約</a>
   </nav>
@@ -484,7 +483,6 @@
 <footer>
   出汁と卵｜常滑 焼き物散歩道Aコース内｜11:00–15:00（延長あり）<br>
   <a href="https://www.instagram.com/dashitoegg/" target="_blank" rel="noopener">Instagram @dashitoegg</a> ・
-  <a href="blog.html">ブログ</a> ・
   <a href="#contact">お問い合わせ・求人</a>
 </footer>
 
@@ -531,8 +529,8 @@ const DEFAULT_CONFIG = {
   packagingFee: 50,
   freeSandoThreshold: 3000,
   minLeadMinutes: 30,
+  shiftReminder: { enabled: false, items: [] }, // items: [{day:1, message:'...'}, ...]
   closedDates: [],
-  posts: [],
   menu: [
     { id:'plain', name:'だし巻き卵サンド', price:600, priceExTax:560, swatch:'#f0a833',
       desc:'まずはここから。ふわふわ卵の王道サンド',
