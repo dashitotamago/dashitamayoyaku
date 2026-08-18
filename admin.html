@@ -152,6 +152,16 @@
     </fieldset>
 
     <fieldset>
+      <legend>シフト提出リマインド（LINE）</legend>
+      <p class="hint" style="margin-top:0;">毎日19:00にチェックし、指定した日にちになったら、その日ごとに設定したメッセージを予約通知と同じLINEグループに送ります。</p>
+      <div class="field">
+        <label><input type="checkbox" id="f_shiftEnabled" style="width:auto; margin-right:6px;">有効にする</label>
+      </div>
+      <div id="shiftItems"></div>
+      <button type="button" class="add-btn" id="addShiftItemBtn">＋ 日にちを追加</button>
+    </fieldset>
+
+    <fieldset>
       <legend>メニュー</legend>
       <div id="menuItems"></div>
       <button type="button" class="add-btn" id="addItemBtn">＋ メニューを追加</button>
@@ -168,13 +178,6 @@
         <button type="button" class="add-btn" id="addClosedDateBtn" style="height:fit-content;">＋ 追加</button>
       </div>
       <div id="closedDatesList" style="margin-top:14px;"></div>
-    </fieldset>
-
-    <fieldset>
-      <legend>ブログ記事</legend>
-      <p class="hint" style="margin-top:0;">SEO対策用のブログです。ここで追加・編集した記事は、公開中のblog.htmlに反映されます。</p>
-      <div id="postItems"></div>
-      <button type="button" class="add-btn" id="addPostBtn">＋ 記事を追加</button>
     </fieldset>
 
     <div class="save-bar">
@@ -231,8 +234,8 @@ const DEFAULT_CONFIG = {
   packagingFee: 50,
   freeSandoThreshold: 3000,
   minLeadMinutes: 30,
+  shiftReminder: { enabled: false, items: [] }, // items: [{day:1, message:'...'}, ...]
   closedDates: [],
-  posts: [],
   menu: [
     { id:'plain', name:'だし巻き卵サンド', price:600, priceExTax:560, swatch:'#f0a833',
       desc:'まずはここから。ふわふわ卵の王道サンド',
@@ -281,7 +284,6 @@ async function loadConfig(){
 
 function renderForm(){
   if(!Array.isArray(config.closedDates)) config.closedDates = [];
-  if(!Array.isArray(config.posts)) config.posts = [];
   document.getElementById('f_address').value = config.address || '';
   document.getElementById('f_parking').value = config.parkingNote || '';
   document.getElementById('f_mapUrl').value = config.mapUrl || '';
@@ -292,9 +294,12 @@ function renderForm(){
   document.getElementById('f_packaging').value = config.packagingFee ?? 0;
   document.getElementById('f_threshold').value = config.freeSandoThreshold ?? 0;
   document.getElementById('f_leadtime').value = config.minLeadMinutes ?? 30;
+  if(!config.shiftReminder) config.shiftReminder = { enabled:false, items:[] };
+  if(!Array.isArray(config.shiftReminder.items)) config.shiftReminder.items = [];
+  document.getElementById('f_shiftEnabled').checked = !!config.shiftReminder.enabled;
   renderMenuItems();
   renderClosedDates();
-  renderPosts();
+  renderShiftItems();
 }
 
 const menuItemsEl = document.getElementById('menuItems');
@@ -332,56 +337,50 @@ closedDatesListEl.addEventListener('click', (e)=>{
   }
 });
 
-/* ---- ブログ記事 ---- */
-const postItemsEl = document.getElementById('postItems');
+/* ---- シフト提出リマインド ---- */
+const shiftItemsEl = document.getElementById('shiftItems');
 
-function renderPosts(){
-  postItemsEl.innerHTML = '';
-  const posts = [...config.posts].sort((a,b)=> (b.date||'').localeCompare(a.date||''));
-  posts.forEach(post=>{
-    const idx = config.posts.indexOf(post);
+function renderShiftItems(){
+  shiftItemsEl.innerHTML = '';
+  const items = [...config.shiftReminder.items].sort((a,b)=> (a.day||0)-(b.day||0));
+  if(items.length === 0){
+    shiftItemsEl.innerHTML = '<p class="hint">まだ日にちが設定されていません。</p>';
+    return;
+  }
+  items.forEach(item=>{
+    const idx = config.shiftReminder.items.indexOf(item);
     const card = document.createElement('div');
     card.className = 'item-card';
     card.dataset.idx = idx;
     card.innerHTML = `
-      <button type="button" class="del-btn" data-action="delpost">削除</button>
-      <div class="row2">
-        <div class="field"><label>タイトル</label><input type="text" class="p-title" value="${escapeHtml(post.title||'')}"></div>
-        <div class="field"><label>日付</label><input type="date" class="p-date" value="${post.date||''}"></div>
-      </div>
-      <div class="field"><label>画像URL（任意）</label><input type="url" class="p-image" value="${post.image||''}" placeholder="https://..."></div>
-      <div class="field"><label>本文</label><textarea class="p-body" style="min-height:120px;">${escapeHtml(post.body||'')}</textarea></div>
+      <button type="button" class="del-btn" data-action="delshift">削除</button>
+      <div class="field"><label>日にち（1〜31）</label><input type="number" class="s-day" min="1" max="31" value="${item.day||''}" style="max-width:120px;"></div>
+      <div class="field"><label>この日に送るメッセージ</label><textarea class="s-message" style="min-height:70px;">${escapeHtml(item.message||'')}</textarea></div>
     `;
-    postItemsEl.appendChild(card);
+    shiftItemsEl.appendChild(card);
   });
 }
 
-document.getElementById('addPostBtn').addEventListener('click', ()=>{
-  config.posts.push({ id:'post_'+Date.now(), title:'', date:new Date().toISOString().slice(0,10), image:'', body:'' });
-  renderPosts();
+document.getElementById('addShiftItemBtn').addEventListener('click', ()=>{
+  config.shiftReminder.items.push({ day:1, message:'' });
+  renderShiftItems();
 });
 
-postItemsEl.addEventListener('click', (e)=>{
-  if(e.target.dataset.action==='delpost'){
+shiftItemsEl.addEventListener('click', (e)=>{
+  if(e.target.dataset.action==='delshift'){
     const idx = Number(e.target.closest('.item-card').dataset.idx);
-    config.posts.splice(idx,1);
-    renderPosts();
+    config.shiftReminder.items.splice(idx,1);
+    renderShiftItems();
   }
 });
 
-function collectPostsIntoConfig(){
-  const cards = [...postItemsEl.querySelectorAll('.item-card')];
-  config.posts = cards.map((card, i)=>{
-    const idx = Number(card.dataset.idx);
-    const existing = config.posts[idx] || {};
-    return {
-      id: existing.id || ('post_'+Date.now()+'_'+i),
-      title: card.querySelector('.p-title').value,
-      date: card.querySelector('.p-date').value,
-      image: card.querySelector('.p-image').value,
-      body: card.querySelector('.p-body').value
-    };
-  });
+function collectShiftItemsIntoConfig(){
+  const cards = [...shiftItemsEl.querySelectorAll('.item-card')];
+  config.shiftReminder.enabled = document.getElementById('f_shiftEnabled').checked;
+  config.shiftReminder.items = cards.map(card=>({
+    day: Number(card.querySelector('.s-day').value)||1,
+    message: card.querySelector('.s-message').value
+  }));
 }
 
 function renderMenuItems(){
@@ -477,7 +476,7 @@ const saveBtn = document.getElementById('saveBtn');
 form.addEventListener('submit', async (e)=>{
   e.preventDefault();
   collectFormIntoConfig();
-  collectPostsIntoConfig();
+  collectShiftItemsIntoConfig();
   saveBtn.disabled = true;
   saveStatus.textContent = '保存中…';
   saveStatus.className = '';
