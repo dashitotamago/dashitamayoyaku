@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>臨時休業の登録｜出汁と卵</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Antique+B1&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#241c15; --paper:#efe4c8; --paper-soft:#f7f1de;
+    --yolk:#f0a833; --shudei:#a63a26; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Zen Kaku Gothic New',sans-serif; line-height:1.7; min-height:100vh; display:flex; align-items:center; justify-content:center;}
+  h1{font-family:'Shippori Antique B1','Zen Kaku Gothic New',sans-serif; font-size:1.6rem; margin:0 0 14px;}
+  main{max-width:420px; width:100%; padding:20px;}
+  .card{
+    background:var(--paper-soft); border:2px solid var(--ink); border-radius:var(--radius);
+    padding:clamp(24px,6vw,36px); box-shadow:6px 6px 0 var(--ink); text-align:center;
+  }
+  p{font-size:.92rem;}
+  .btn{
+    margin-top:14px; width:100%; padding:18px; border-radius:999px; border:2px solid var(--ink);
+    background:var(--shudei); color:#fff8ee; font-size:1.05rem; font-weight:900; cursor:pointer;
+    box-shadow:4px 4px 0 var(--ink);
+  }
+  .btn:disabled{opacity:.5; cursor:not-allowed;}
+  .btn:not(:disabled):hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--ink);}
+  .status-msg{margin-top:16px; padding:14px; border-radius:10px; font-size:.9rem; font-weight:700; display:none; line-height:1.6;}
+  .status-msg.ok{display:block; background:#dff0d8; border:2px solid #3a6b2e; color:#2c5023;}
+  .status-msg.err{display:block; background:#f6d9d3; border:2px solid var(--shudei); color:var(--shudei);}
+  .back{display:inline-block; margin-top:20px; font-size:.82rem; font-weight:700; text-decoration:underline; color:inherit;}
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <h1>🔔 臨時休業の登録</h1>
+    <p>下のボタンを押すと、<strong>明日</strong>が臨時休業日として予約サイトに登録され、あわせてLINEに告知文が送られます。</p>
+    <button type="button" class="btn" id="closeBtn">明日を臨時休業にする</button>
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+  <div style="text-align:center;">
+    <a class="back" href="index.html">← 予約サイトに戻る</a>
+  </div>
+</main>
+
+<script>
+// index.html / admin.html と同じGASウェブアプリのURLです
+const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzkxyY8RxTDBH5wbsJjC6eJI_NFVODsOh_0PVxSj5Jy8GYCpmD8Rj2CP6FzATiQJmtMTA/exec";
+// admin.htmlと同じ合言葉（パスコード）。このページ限定の簡易的な保護です。
+const PASSCODE = "0310";
+
+function postToGAS(payload){
+  return new Promise((resolve, reject)=>{
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', GAS_ENDPOINT, true);
+    xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
+    xhr.onload = function(){
+      if(xhr.status >= 200 && xhr.status < 300){
+        try{ resolve(JSON.parse(xhr.responseText)); }
+        catch(e){ reject(new Error('サーバーからの応答を読み取れませんでした')); }
+      }else{
+        reject(new Error('通信エラー（' + xhr.status + '）'));
+      }
+    };
+    xhr.onerror = function(){ reject(new Error('通信に失敗しました。')); };
+    xhr.send(JSON.stringify(payload));
+  });
+}
+
+const btn = document.getElementById('closeBtn');
+const statusMsg = document.getElementById('statusMsg');
+
+btn.addEventListener('click', async ()=>{
+  if(!confirm('明日を臨時休業として登録し、LINEに告知文を送信します。よろしいですか？')) return;
+
+  btn.disabled = true;
+  btn.textContent = '処理中…';
+  statusMsg.style.display = 'none';
+
+  try{
+    const json = await postToGAS({ type:'closeTomorrow', passcode: PASSCODE });
+    if(!json.ok) throw new Error(json.error || '登録できませんでした');
+    statusMsg.textContent = json.alreadyClosed
+      ? '明日（' + json.tomorrowStr + '）はすでに臨時休業日として登録済みでした。LINEには再度告知を送りました。'
+      : '明日（' + json.tomorrowStr + '）を臨時休業日として登録しました。LINEにも告知を送信しました。';
+    statusMsg.className = 'status-msg ok';
+  }catch(err){
+    statusMsg.textContent = '登録できませんでした：' + err.message;
+    statusMsg.className = 'status-msg err';
+  }finally{
+    btn.disabled = false;
+    btn.textContent = '明日を臨時休業にする';
+  }
+});
+</script>
+</body>
+</html>
