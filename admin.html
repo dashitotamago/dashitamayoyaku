@@ -179,9 +179,14 @@
       </div>
       <div id="closedDatesList" style="margin-top:14px;"></div>
       <div class="field" style="margin-top:18px;">
-        <label for="f_closureMessage">翌日を臨時休業にするリンクをタップしたときに送るLINE告知文</label>
+        <label for="f_closureMessage">「平日（臨時休業）」ボタンで送るLINE告知文</label>
         <textarea id="f_closureMessage" style="min-height:70px;"></textarea>
-        <p class="hint">「close-tomorrow.html」を開いてボタンを押すと、翌日が臨時休業日として登録され、この文章がLINEに送られます。グループのトークにこのページのリンクをピン留めしておくと便利です。</p>
+        <p class="hint">close-tomorrow.htmlの「平日（臨時休業）」ボタンを押すと、翌日が臨時休業日として登録され、この文章がLINEに送られます。</p>
+      </div>
+      <div class="field">
+        <label for="f_staffReducedMessage">「土日祝（スタッフ縮小）」ボタンで送るLINE告知文</label>
+        <textarea id="f_staffReducedMessage" style="min-height:70px;"></textarea>
+        <p class="hint">こちらは臨時休業日には登録されず、LINEへの告知のみ送られます。グループのトークにclose-tomorrow.htmlのリンクをピン留めしておくと便利です。</p>
       </div>
     </fieldset>
 
@@ -240,6 +245,7 @@ const DEFAULT_CONFIG = {
   freeSandoThreshold: 3000,
   minLeadMinutes: 30,
   closureAnnouncementMessage: '🔔 明日は臨時休業となりました。よろしくお願いします。',
+  staffReducedMessage: '⚠️ 明日はスタッフを縮小して営業いたします。よろしくお願いします。',
   shiftReminder: { enabled: false, items: [] }, // items: [{day:1, message:'...'}, ...]
   closedDates: [],
   menu: [
@@ -301,6 +307,7 @@ function renderForm(){
   document.getElementById('f_threshold').value = config.freeSandoThreshold ?? 0;
   document.getElementById('f_leadtime').value = config.minLeadMinutes ?? 30;
   document.getElementById('f_closureMessage').value = config.closureAnnouncementMessage || '';
+  document.getElementById('f_staffReducedMessage').value = config.staffReducedMessage || '';
   if(!config.shiftReminder) config.shiftReminder = { enabled:false, items:[] };
   if(!Array.isArray(config.shiftReminder.items)) config.shiftReminder.items = [];
   document.getElementById('f_shiftEnabled').checked = !!config.shiftReminder.enabled;
@@ -453,6 +460,7 @@ function collectFormIntoConfig(){
   config.freeSandoThreshold = Number(document.getElementById('f_threshold').value)||0;
   config.minLeadMinutes = Number(document.getElementById('f_leadtime').value)||0;
   config.closureAnnouncementMessage = document.getElementById('f_closureMessage').value;
+  config.staffReducedMessage = document.getElementById('f_staffReducedMessage').value;
 
   const cards = [...menuItemsEl.querySelectorAll('.item-card')];
   config.menu = cards.map((card, idx)=>{
