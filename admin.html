@@ -178,6 +178,10 @@
         <button type="button" class="add-btn" id="addClosedDateBtn" style="height:fit-content;">＋ 追加</button>
       </div>
       <div id="closedDatesList" style="margin-top:14px;"></div>
+      <div class="field" style="margin-top:18px;">
+        <label for="f_closureKeyword">LINEグループの合言葉（この文字を含むメッセージが送られると、翌日が自動で臨時休業日に登録されます）</label>
+        <input type="text" id="f_closureKeyword" placeholder="例：店舗お休み">
+      </div>
     </fieldset>
 
     <div class="save-bar">
@@ -234,6 +238,7 @@ const DEFAULT_CONFIG = {
   packagingFee: 50,
   freeSandoThreshold: 3000,
   minLeadMinutes: 30,
+  closureKeyword: '店舗お休み',
   shiftReminder: { enabled: false, items: [] }, // items: [{day:1, message:'...'}, ...]
   closedDates: [],
   menu: [
@@ -294,6 +299,7 @@ function renderForm(){
   document.getElementById('f_packaging').value = config.packagingFee ?? 0;
   document.getElementById('f_threshold').value = config.freeSandoThreshold ?? 0;
   document.getElementById('f_leadtime').value = config.minLeadMinutes ?? 30;
+  document.getElementById('f_closureKeyword').value = config.closureKeyword || '';
   if(!config.shiftReminder) config.shiftReminder = { enabled:false, items:[] };
   if(!Array.isArray(config.shiftReminder.items)) config.shiftReminder.items = [];
   document.getElementById('f_shiftEnabled').checked = !!config.shiftReminder.enabled;
@@ -445,6 +451,7 @@ function collectFormIntoConfig(){
   config.packagingFee = Number(document.getElementById('f_packaging').value)||0;
   config.freeSandoThreshold = Number(document.getElementById('f_threshold').value)||0;
   config.minLeadMinutes = Number(document.getElementById('f_leadtime').value)||0;
+  config.closureKeyword = document.getElementById('f_closureKeyword').value;
 
   const cards = [...menuItemsEl.querySelectorAll('.item-card')];
   config.menu = cards.map((card, idx)=>{
