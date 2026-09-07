@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>臨時休業の登録｜出汁と卵</title>
+<title>臨時休業・スタッフ縮小の連絡｜出汁と卵</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Antique+B1&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -14,18 +14,22 @@
   }
   *{box-sizing:border-box;}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Zen Kaku Gothic New',sans-serif; line-height:1.7; min-height:100vh; display:flex; align-items:center; justify-content:center;}
-  h1{font-family:'Shippori Antique B1','Zen Kaku Gothic New',sans-serif; font-size:1.6rem; margin:0 0 14px;}
-  main{max-width:420px; width:100%; padding:20px;}
+  h1{font-family:'Shippori Antique B1','Zen Kaku Gothic New',sans-serif; font-size:1.5rem; margin:0 0 14px;}
+  h2{font-family:'Shippori Antique B1','Zen Kaku Gothic New',sans-serif; font-size:1.05rem; margin:24px 0 8px;}
+  main{max-width:440px; width:100%; padding:20px;}
   .card{
     background:var(--paper-soft); border:2px solid var(--ink); border-radius:var(--radius);
     padding:clamp(24px,6vw,36px); box-shadow:6px 6px 0 var(--ink); text-align:center;
   }
   p{font-size:.92rem;}
+  .option{ margin-top:10px; padding-top:18px; border-top:2px dashed rgba(36,28,21,.3); }
+  .option:first-of-type{ border-top:none; padding-top:0; }
   .btn{
-    margin-top:14px; width:100%; padding:18px; border-radius:999px; border:2px solid var(--ink);
-    background:var(--shudei); color:#fff8ee; font-size:1.05rem; font-weight:900; cursor:pointer;
-    box-shadow:4px 4px 0 var(--ink);
+    margin-top:10px; width:100%; padding:16px; border-radius:999px; border:2px solid var(--ink);
+    font-size:1rem; font-weight:900; cursor:pointer; box-shadow:4px 4px 0 var(--ink);
   }
+  .btn-closure{ background:var(--shudei); color:#fff8ee; }
+  .btn-staff{ background:var(--yolk); color:var(--ink); }
   .btn:disabled{opacity:.5; cursor:not-allowed;}
   .btn:not(:disabled):hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--ink);}
   .status-msg{margin-top:16px; padding:14px; border-radius:10px; font-size:.9rem; font-weight:700; display:none; line-height:1.6;}
@@ -37,9 +41,21 @@
 <body>
 <main>
   <div class="card">
-    <h1>🔔 臨時休業の登録</h1>
-    <p>下のボタンを押すと、<strong>明日</strong>が臨時休業日として予約サイトに登録され、あわせてLINEに告知文が送られます。</p>
-    <button type="button" class="btn" id="closeBtn">明日を臨時休業にする</button>
+    <h1>🔔 翌日の連絡</h1>
+    <p>明日の状況に合わせて、どちらかのボタンを押してください。</p>
+
+    <div class="option">
+      <h2>平日（臨時休業）</h2>
+      <p style="font-size:.85rem;">明日を臨時休業日として予約サイトに登録し、LINEに告知します。</p>
+      <button type="button" class="btn btn-closure" id="closureBtn">臨時休業にする</button>
+    </div>
+
+    <div class="option">
+      <h2>土日祝（スタッフ縮小）</h2>
+      <p style="font-size:.85rem;">予約サイトの営業日はそのままで、LINEにのみ告知します。</p>
+      <button type="button" class="btn btn-staff" id="staffBtn">スタッフ縮小を連絡する</button>
+    </div>
+
     <div class="status-msg" id="statusMsg"></div>
   </div>
   <div style="text-align:center;">
@@ -71,14 +87,14 @@ function postToGAS(payload){
   });
 }
 
-const btn = document.getElementById('closeBtn');
 const statusMsg = document.getElementById('statusMsg');
 
-btn.addEventListener('click', async ()=>{
+const closureBtn = document.getElementById('closureBtn');
+closureBtn.addEventListener('click', async ()=>{
   if(!confirm('明日を臨時休業として登録し、LINEに告知文を送信します。よろしいですか？')) return;
 
-  btn.disabled = true;
-  btn.textContent = '処理中…';
+  closureBtn.disabled = true;
+  closureBtn.textContent = '処理中…';
   statusMsg.style.display = 'none';
 
   try{
@@ -92,8 +108,30 @@ btn.addEventListener('click', async ()=>{
     statusMsg.textContent = '登録できませんでした：' + err.message;
     statusMsg.className = 'status-msg err';
   }finally{
-    btn.disabled = false;
-    btn.textContent = '明日を臨時休業にする';
+    closureBtn.disabled = false;
+    closureBtn.textContent = '臨時休業にする';
+  }
+});
+
+const staffBtn = document.getElementById('staffBtn');
+staffBtn.addEventListener('click', async ()=>{
+  if(!confirm('LINEに「スタッフ縮小」の告知文を送信します。予約サイトの営業日は変更されません。よろしいですか？')) return;
+
+  staffBtn.disabled = true;
+  staffBtn.textContent = '処理中…';
+  statusMsg.style.display = 'none';
+
+  try{
+    const json = await postToGAS({ type:'staffReduced', passcode: PASSCODE });
+    if(!json.ok) throw new Error(json.error || '送信できませんでした');
+    statusMsg.textContent = 'LINEに「スタッフ縮小」の告知を送信しました。';
+    statusMsg.className = 'status-msg ok';
+  }catch(err){
+    statusMsg.textContent = '送信できませんでした：' + err.message;
+    statusMsg.className = 'status-msg err';
+  }finally{
+    staffBtn.disabled = false;
+    staffBtn.textContent = 'スタッフ縮小を連絡する';
   }
 });
 </script>
