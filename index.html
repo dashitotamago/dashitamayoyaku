@@ -250,7 +250,7 @@
   <nav class="links">
     <a href="#menu">メニュー</a>
     <a href="#access">アクセス</a>
-    <a href="#contact">お問い合わせ・求人</a>
+    <a href="#contact">お問い合わせ・仕出し・大量注文</a>
     <a href="#reserve">ご予約</a>
   </nav>
   <a class="cta-btn" href="#reserve">テイクアウトを予約する</a>
@@ -452,8 +452,8 @@
 <section id="contact">
   <div class="wrap">
     <p class="eyebrow">CONTACT</p>
-    <h2 style="font-size:clamp(1.6rem,3vw,2.2rem);">お問い合わせ・求人応募</h2>
-    <p style="max-width:56ch;">テイクアウト予約以外のご質問のほか、求人へのご応募もこちらから承っております。</p>
+    <h2 style="font-size:clamp(1.6rem,3vw,2.2rem);">お問い合わせ・仕出し・大量注文</h2>
+    <p style="max-width:56ch;">テイクアウト予約以外のご質問のほか、仕出し・大量注文のご相談もこちらから承っております。<br>配達や商品構成（1切れ単位での組み合わせなど）も柔軟に対応可能ですので、お気軽にお問い合わせください。</p>
 
     <div class="form-shell">
       <form id="contactForm">
@@ -483,7 +483,7 @@
 <footer>
   出汁と卵｜常滑 焼き物散歩道Aコース内｜11:00–15:00（延長あり）<br>
   <a href="https://www.instagram.com/dashitoegg/" target="_blank" rel="noopener">Instagram @dashitoegg</a> ・
-  <a href="#contact">お問い合わせ・求人</a>
+  <a href="#contact">お問い合わせ・仕出し・大量注文</a>
 </footer>
 
 <script>
@@ -529,6 +529,10 @@ const DEFAULT_CONFIG = {
   packagingFee: 50,
   freeSandoThreshold: 3000,
   minLeadMinutes: 30,
+  closureAnnouncementMessage: '🔔 明日は臨時休業となりました。よろしくお願いします。',
+  staffReducedMessage: '⚠️ 明日はスタッフを縮小して営業いたします。よろしくお願いします。',
+  businessOpenHour: 11,
+  businessCloseHour: 15,
   shiftReminder: { enabled: false, items: [] }, // items: [{day:1, message:'...'}, ...]
   closedDates: [],
   menu: [
