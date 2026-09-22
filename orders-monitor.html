@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新着オーダー表示｜出汁と卵</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Antique+B1&family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#241c15; --paper:#efe4c8; --paper-soft:#f7f1de;
+    --yolk:#f0a833; --shudei:#a63a26; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Zen Kaku Gothic New',sans-serif;}
+  h1{font-family:'Shippori Antique B1','Zen Kaku Gothic New',sans-serif;}
+
+  /* 開始前オーバーレイ（音を有効にするため、タップが必要） */
+  #startOverlay{
+    position:fixed; inset:0; background:var(--ink); color:#fff8ee;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; z-index:999;
+    text-align:center; padding:20px;
+  }
+  #startOverlay button{
+    padding:20px 40px; font-size:1.3rem; font-weight:900; border-radius:999px; border:3px solid #fff8ee;
+    background:var(--shudei); color:#fff8ee; cursor:pointer;
+  }
+
+  header{
+    padding:16px 24px; border-bottom:3px solid var(--ink); background:var(--paper-soft);
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+  }
+  header h1{font-size:1.4rem; margin:0;}
+  header .status{font-size:.85rem; font-weight:700; opacity:.75;}
+
+  main{padding:20px; max-width:900px; margin:0 auto;}
+
+  .order-card{
+    background:var(--paper-soft); border:3px solid var(--ink); border-radius:var(--radius);
+    padding:20px 24px; margin-bottom:16px; box-shadow:5px 5px 0 var(--ink);
+  }
+  .order-card.is-new{
+    animation: flash 1s ease-in-out 4;
+    border-color:var(--shudei);
+  }
+  @keyframes flash{
+    0%, 100% { background:var(--paper-soft); }
+    50% { background:var(--yolk); }
+  }
+  .order-top{display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:10px;}
+  .order-time{font-size:2rem; font-weight:900; color:var(--shudei);}
+  .order-name{font-size:1.2rem; font-weight:700;}
+  .order-total{font-size:1.1rem; font-weight:900;}
+  .order-items{white-space:pre-wrap; font-size:.95rem; margin-top:10px; opacity:.9;}
+  .order-notes{margin-top:8px; font-size:.85rem; color:var(--shudei); font-weight:700;}
+  .empty-msg{text-align:center; opacity:.6; padding:40px 0; font-size:1.1rem;}
+</style>
+</head>
+<body>
+
+<div id="startOverlay">
+  <h1 style="font-size:1.6rem;">🔔 新着オーダー表示</h1>
+  <p>タップして開始してください（通知音を鳴らすために必要です）</p>
+  <button type="button" id="startBtn">開始する</button>
+</div>
+
+<header>
+  <h1>本日のオーダー</h1>
+  <div class="status" id="statusText">読み込み中…</div>
+</header>
+
+<main id="ordersList">
+  <p class="empty-msg">読み込み中…</p>
+</main>
+
+<script>
+const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzkxyY8RxTDBH5wbsJjC6eJI_NFVODsOh_0PVxSj5Jy8GYCpmD8Rj2CP6FzATiQJmtMTA/exec";
+const PASSCODE = "0310";
+const POLL_INTERVAL_MS = 15000;
+
+let audioCtx = null;
+let knownIds = new Set();
+let firstLoad = true;
+
+function playBeep(){
+  if(!audioCtx) return;
+  for(let i=0;i<3;i++){
+    const t = audioCtx.currentTime + i*0.35;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(880, t);
+    gain.gain.setValueAtTime(0.3, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t+0.3);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t+0.3);
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function fetchOrders(){
+  try{
+    const res = await fetch(GAS_ENDPOINT + '?action=todayOrders&passcode=' + encodeURIComponent(PASSCODE));
+    const json = await res.json();
+    if(!json.ok){
+      document.getElementById('statusText').textContent = 'エラー：' + (json.error||'');
+      return;
+    }
+    renderOrders(json.orders);
+    document.getElementById('statusText').textContent = '最終更新：' + new Date().toLocaleTimeString('ja-JP');
+  }catch(err){
+    document.getElementById('statusText').textContent = '通信エラー：' + err.message;
+  }
+}
+
+function renderOrders(orders){
+  const listEl = document.getElementById('ordersList');
+
+  if(orders.length === 0){
+    listEl.innerHTML = '<p class="empty-msg">本日のご注文はまだありません。</p>';
+    knownIds = new Set();
+    firstLoad = false;
+    return;
+  }
+
+  const currentIds = new Set(orders.map(o=>o.reservationId));
+  const newOnes = firstLoad ? [] : orders.filter(o => !knownIds.has(o.reservationId));
+
+  if(newOnes.length > 0){
+    playBeep();
+  }
+
+  listEl.innerHTML = orders.map(o => `
+    <div class="order-card ${newOnes.some(n=>n.reservationId===o.reservationId) ? 'is-new' : ''}">
+      <div class="order-top">
+        <div class="order-time">${escapeHtml(o.pickupTime)}</div>
+        <div class="order-name">${escapeHtml(o.name)} 様　<span style="font-size:.8rem; padding:2px 8px; border-radius:6px; background:${o.orderType==='来店' ? '#f0a833' : '#8a5a34'}; color:#fff;">${escapeHtml(o.orderType || 'テイクアウト')}</span></div>
+        <div class="order-total">${Number(o.total).toLocaleString()}円</div>
+      </div>
+      <div class="order-items">${escapeHtml(o.itemsText)}</div>
+      ${o.notes ? `<div class="order-notes">備考：${escapeHtml(o.notes)}</div>` : ''}
+    </div>
+  `).join('');
+
+  knownIds = currentIds;
+  firstLoad = false;
+}
+
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  document.getElementById('startOverlay').style.display = 'none';
+  fetchOrders();
+  setInterval(fetchOrders, POLL_INTERVAL_MS);
+});
+</script>
+</body>
+</html>
