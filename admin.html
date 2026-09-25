@@ -130,20 +130,25 @@
 
     <fieldset>
       <legend>料金の設定</legend>
-      <div class="row2">
-        <div class="field">
-          <label for="f_packaging">テイクアウト包材代（円）</label>
-          <input type="number" id="f_packaging" min="0" step="10">
-        </div>
-        <div class="field">
-          <label for="f_threshold">サンド1個プレゼントになる金額（円）</label>
-          <input type="number" id="f_threshold" min="0" step="100">
-        </div>
+      <div class="field">
+        <label for="f_packaging">テイクアウト包材代（円）</label>
+        <input type="number" id="f_packaging" min="0" step="10">
       </div>
     </fieldset>
 
     <fieldset>
       <legend>予約の受け取り時間</legend>
+      <div class="row2">
+        <div class="field">
+          <label for="f_openTime">予約受付の開始時刻</label>
+          <input type="time" id="f_openTime">
+        </div>
+        <div class="field">
+          <label for="f_closeTime">予約受付の終了時刻</label>
+          <input type="time" id="f_closeTime">
+        </div>
+      </div>
+      <p class="hint" style="margin-top:0;">開始・終了時刻ちょうどの枠（15分単位）は自動的に除外されます（例：11:00〜15:00なら、選べるのは11:15〜14:45です）。</p>
       <div class="field">
         <label for="f_leadtime">注文から受け取りまでの最短時間（分）</label>
         <input type="number" id="f_leadtime" min="0" step="5">
@@ -242,8 +247,9 @@ const DEFAULT_CONFIG = {
   parkingMapUrl: 'https://maps.app.goo.gl/3aR4ghZadkgCv3c26?g_st=ic',
   instagram: 'dashitoegg',
   packagingFee: 50,
-  freeSandoThreshold: 3000,
   minLeadMinutes: 30,
+  reserveOpenTime: '11:00',
+  reserveCloseTime: '15:00',
   closureAnnouncementMessage: '🔔 明日は臨時休業となりました。よろしくお願いします。',
   staffReducedMessage: '⚠️ 明日はスタッフを縮小して営業いたします。よろしくお願いします。',
   shiftReminder: { enabled: false, items: [] }, // items: [{day:1, message:'...'}, ...]
@@ -304,8 +310,9 @@ function renderForm(){
   document.getElementById('f_closedDays').value = config.closedDays || '';
   document.getElementById('f_instagram').value = config.instagram || '';
   document.getElementById('f_packaging').value = config.packagingFee ?? 0;
-  document.getElementById('f_threshold').value = config.freeSandoThreshold ?? 0;
   document.getElementById('f_leadtime').value = config.minLeadMinutes ?? 30;
+  document.getElementById('f_openTime').value = config.reserveOpenTime || '11:00';
+  document.getElementById('f_closeTime').value = config.reserveCloseTime || '15:00';
   document.getElementById('f_closureMessage').value = config.closureAnnouncementMessage || '';
   document.getElementById('f_staffReducedMessage').value = config.staffReducedMessage || '';
   if(!config.shiftReminder) config.shiftReminder = { enabled:false, items:[] };
@@ -457,8 +464,9 @@ function collectFormIntoConfig(){
   config.closedDays = document.getElementById('f_closedDays').value;
   config.instagram = document.getElementById('f_instagram').value.replace('@','').trim();
   config.packagingFee = Number(document.getElementById('f_packaging').value)||0;
-  config.freeSandoThreshold = Number(document.getElementById('f_threshold').value)||0;
   config.minLeadMinutes = Number(document.getElementById('f_leadtime').value)||0;
+  config.reserveOpenTime = document.getElementById('f_openTime').value || '11:00';
+  config.reserveCloseTime = document.getElementById('f_closeTime').value || '15:00';
   config.closureAnnouncementMessage = document.getElementById('f_closureMessage').value;
   config.staffReducedMessage = document.getElementById('f_staffReducedMessage').value;
 
