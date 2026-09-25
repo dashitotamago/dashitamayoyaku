@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>出汁と卵｜常滑 焼き物散歩道 テイクアウト予約</title>
+<title>出汁と卵｜常滑 焼き物散歩道 テイクアウト・来店予約</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Antique+B1&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -210,11 +210,6 @@
   }
   .total-box .row{display:flex; justify-content:space-between;}
   .total-box .grand{font-size:1.4rem; font-weight:900; color:var(--shudei);}
-  .perk-banner{
-    display:none; margin-top:10px; background:var(--yolk); border:2px solid var(--ink); border-radius:10px;
-    padding:10px 14px; font-size:.85rem; font-weight:700;
-  }
-  .perk-banner.show{display:block;}
 
   .submit-btn{
     margin-top:22px; width:100%; padding:16px; border-radius:999px; border:2px solid var(--ink);
@@ -253,7 +248,7 @@
     <a href="#contact">お問い合わせ・仕出し・大量注文</a>
     <a href="#reserve">ご予約</a>
   </nav>
-  <a class="cta-btn" href="#reserve">テイクアウトを予約する</a>
+  <a class="cta-btn" href="#reserve">テイクアウト・来店予約する</a>
 </header>
 
 <section class="hero-banner">
@@ -271,7 +266,7 @@
       <span>🥪 数量限定メニューあり</span>
     </div>
     <div class="hero-actions">
-      <a class="cta-btn" href="#reserve">テイクアウトを予約する</a>
+      <a class="cta-btn" href="#reserve">テイクアウト・来店予約する</a>
       <a class="btn-outline" href="#menu">メニューを見る</a>
     </div>
   </div>
@@ -319,7 +314,6 @@
     <div class="menu-grid" id="menuGrid"></div>
     <div class="notice-bar">
       <div><strong>包材代</strong>：テイクアウトのご注文ごとに包材代 <span id="noticePackaging">50</span>円を頂戴しております（来店予約は包材不要のため対象外です）。</div>
-      <div><strong>ご予約特典</strong>：<span id="noticeThreshold">3,000</span>円以上のご注文で、だし巻き卵サンドを1つプレゼントいたします（平日限定）。</div>
     </div>
   </div>
 </section>
@@ -329,7 +323,7 @@
 <section id="reserve">
   <div class="wrap">
     <p class="eyebrow">RESERVE</p>
-    <h2 style="font-size:clamp(1.6rem,3vw,2.2rem);">テイクアウト予約</h2>
+    <h2 style="font-size:clamp(1.6rem,3vw,2.2rem);">テイクアウト・来店予約</h2>
     <p style="max-width:56ch;">お受け取り日時とメニューをお選びください。当日のご注文でも承ります。前日までにご予約いただいた場合、受け取り日当日が天候等により臨時休業となるときは、受け取り日当日の11:00までにお電話にてご連絡いたします。当日のご注文は必ずお受けいたします。</p>
     <p style="max-width:56ch; font-weight:700;">キャンセル料について：前日までのキャンセルは無料、当日のキャンセルはキャンセル料100%（全額）を頂戴いたします。</p>
 
@@ -401,7 +395,6 @@
           <div class="row"><span>テイクアウト包材代</span><span id="packagingOut">0円</span></div>
           <div class="row grand"><span>合計</span><span id="totalOut">0円</span></div>
         </div>
-        <div class="perk-banner" id="perkBanner">🎁 3,000円以上のご注文特典：だし巻き卵サンドを1つプレゼントします！</div>
 
         <button type="submit" class="submit-btn" id="submitBtn" disabled>この内容で予約する</button>
         <p class="form-note">送信後、内容に変更が必要な場合のみお電話でご連絡する場合があります。</p>
@@ -470,7 +463,6 @@
             <div class="row"><span>テイクアウト包材代</span><span id="m_packagingOut">0円</span></div>
             <div class="row grand"><span>合計</span><span id="m_totalOut">0円</span></div>
           </div>
-          <div class="perk-banner" id="m_perkBanner">🎁 3,000円以上のご注文特典：だし巻き卵サンドを1つプレゼントします！</div>
 
           <button type="submit" class="submit-btn" id="updateBtn" style="margin-top:18px;">この内容で変更を保存する</button>
           <button type="button" class="submit-btn" id="cancelBtn" style="margin-top:10px; background:#fff; color:var(--shudei);">この予約をキャンセルする</button>
@@ -487,7 +479,7 @@
   <div class="wrap">
     <p class="eyebrow">CONTACT</p>
     <h2 style="font-size:clamp(1.6rem,3vw,2.2rem);">お問い合わせ・仕出し・大量注文</h2>
-    <p style="max-width:56ch;">テイクアウト予約以外のご質問のほか、仕出し・大量注文のご相談もこちらから承っております。<br>配達や商品構成（1切れ単位での組み合わせなど）も柔軟に対応可能ですので、お気軽にお問い合わせください。</p>
+    <p style="max-width:56ch;">テイクアウト・来店予約以外のご質問のほか、仕出し・大量注文のご相談もこちらから承っております。<br>配達や商品構成（1切れ単位での組み合わせなど）も柔軟に対応可能ですので、お気軽にお問い合わせください。</p>
 
     <div class="form-shell">
       <form id="contactForm">
@@ -561,12 +553,11 @@ const DEFAULT_CONFIG = {
   parkingMapUrl: 'https://maps.app.goo.gl/3aR4ghZadkgCv3c26?g_st=ic',
   instagram: 'dashitoegg',
   packagingFee: 50,
-  freeSandoThreshold: 3000,
   minLeadMinutes: 30,
+  reserveOpenTime: '11:00',
+  reserveCloseTime: '15:00',
   closureAnnouncementMessage: '🔔 明日は臨時休業となりました。よろしくお願いします。',
   staffReducedMessage: '⚠️ 明日はスタッフを縮小して営業いたします。よろしくお願いします。',
-  businessOpenHour: 11,
-  businessCloseHour: 15,
   shiftReminder: { enabled: false, items: [] }, // items: [{day:1, message:'...'}, ...]
   closedDates: [],
   menu: [
@@ -606,7 +597,6 @@ function renderStoreInfo(){
   document.getElementById('accessInstagram').textContent = '@' + CONFIG.instagram;
   document.getElementById('accessInstagram').href = 'https://www.instagram.com/' + CONFIG.instagram + '/';
   document.getElementById('noticePackaging').textContent = CONFIG.packagingFee.toLocaleString();
-  document.getElementById('noticeThreshold').textContent = CONFIG.freeSandoThreshold.toLocaleString();
 }
 
 /* ============ メニュー描画 ============ */
@@ -630,13 +620,22 @@ function renderMenu(){
 /* ============ 受け取り日時 ============ */
 // 指定日の受け取り可能時間の一覧を返す。当日の場合は「現在時刻＋リードタイム」より前の枠を除外する。
 function buildAvailableSlots(pickupDateStr){
+  const openStr = CONFIG.reserveOpenTime || '11:00';
+  const closeStr = CONFIG.reserveCloseTime || '15:00';
+  const interval = 15; // 受け取り枠の間隔は15分固定
+
+  const [oh, om] = openStr.split(':').map(Number);
+  const [ch, cm] = closeStr.split(':').map(Number);
+  // 開店直後・閉店直前の1枠分（interval分）は受け取り不可にする
+  const startTotal = oh*60 + om + interval;
+  const endTotal = ch*60 + cm - interval;
+
   const slots = [];
-  for(let h=11; h<=14; h++){
-    for(let m=0; m<60; m+=15){
-      if(h===11 && m===0) continue; // 開店直後15分は除外
-      slots.push({ h, m, label: `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}` });
-    }
+  for(let t=startTotal; t<=endTotal; t+=interval){
+    const h = Math.floor(t/60), m = t%60;
+    slots.push({ h, m, label: `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}` });
   }
+
   const todayStr = `${yyyy}-${mm}-${dd}`;
   if(pickupDateStr === todayStr){
     const now = new Date();
@@ -727,14 +726,6 @@ function lineTotal(item){
   return unit * s.qty;
 }
 
-// 'YYYY-MM-DD' 文字列が平日（月〜金）かどうかを判定する
-function isWeekdayDateStr(dateStr){
-  if(!dateStr) return false;
-  const d = new Date(dateStr + 'T00:00:00');
-  const day = d.getDay(); // 0:日 6:土
-  return day !== 0 && day !== 6;
-}
-
 function getOrderType(){
   const el = document.querySelector('input[name="orderType"]:checked');
   return el ? el.value : 'takeout';
@@ -752,16 +743,14 @@ function recalc(){
   const orderType = getOrderType();
   const packaging = (totalQty>0 && orderType==='takeout') ? CONFIG.packagingFee : 0;
   const total = subtotal + packaging;
-  const freeSando = subtotal >= CONFIG.freeSandoThreshold && isWeekdayDateStr(pickupDateEl.value);
 
   document.getElementById('subtotalOut').textContent = subtotal.toLocaleString()+'円';
   document.getElementById('packagingOut').textContent = packaging.toLocaleString()+'円';
   document.getElementById('totalOut').textContent = total.toLocaleString()+'円';
-  document.getElementById('perkBanner').classList.toggle('show', freeSando);
   document.getElementById('dineinNote').style.display = orderType==='dinein' ? 'block' : 'none';
   document.getElementById('submitBtn').disabled = totalQty===0 || isPickupDateClosed();
 
-  return {subtotal, packaging, total, freeSando, totalQty, orderType};
+  return {subtotal, packaging, total, totalQty, orderType};
 }
 
 document.querySelectorAll('input[name="orderType"]').forEach(el=>{
@@ -822,7 +811,7 @@ form.addEventListener('submit', async (e)=>{
     updateClosedDateWarning();
     return;
   }
-  const {subtotal, packaging, total, freeSando, orderType} = recalc();
+  const {subtotal, packaging, total, orderType} = recalc();
 
   const itemsText = CONFIG.menu
     .filter(item=>state[item.id].qty>0)
@@ -850,7 +839,7 @@ form.addEventListener('submit', async (e)=>{
     pickupTime: document.getElementById('pickupTime').value,
     notes: document.getElementById('notes').value,
     itemsText, itemsJson,
-    subtotal, packagingFee: packaging, total, freeSando
+    subtotal, packagingFee: packaging, total
   };
 
   const submitBtn = document.getElementById('submitBtn');
@@ -1009,16 +998,14 @@ function manageRecalc(){
   const orderType = getManageOrderType();
   const packaging = (totalQty>0 && orderType==='takeout') ? CONFIG.packagingFee : 0;
   const total = subtotal + packaging;
-  const freeSando = subtotal >= CONFIG.freeSandoThreshold && isWeekdayDateStr(mPickupDateEl.value);
 
   document.getElementById('m_subtotalOut').textContent = subtotal.toLocaleString()+'円';
   document.getElementById('m_packagingOut').textContent = packaging.toLocaleString()+'円';
   document.getElementById('m_totalOut').textContent = total.toLocaleString()+'円';
-  document.getElementById('m_perkBanner').classList.toggle('show', freeSando);
   document.getElementById('m_dineinNote').style.display = orderType==='dinein' ? 'block' : 'none';
   document.getElementById('updateBtn').disabled = totalQty===0 || isManageDateClosed();
 
-  return {subtotal, packaging, total, freeSando, totalQty, orderType};
+  return {subtotal, packaging, total, totalQty, orderType};
 }
 
 document.querySelectorAll('input[name="m_orderType"]').forEach(el=>{
@@ -1130,7 +1117,7 @@ editForm.addEventListener('submit', async (e)=>{
     updateManageClosedWarning();
     return;
   }
-  const {subtotal, packaging, total, freeSando, orderType} = manageRecalc();
+  const {subtotal, packaging, total, orderType} = manageRecalc();
 
   const itemsText = CONFIG.menu
     .filter(item=>mState[item.id].qty>0)
@@ -1155,7 +1142,7 @@ editForm.addEventListener('submit', async (e)=>{
     email: document.getElementById('m_email').value,
     notes: document.getElementById('m_notes').value,
     itemsText, itemsJson,
-    subtotal, packagingFee: packaging, total, freeSando
+    subtotal, packagingFee: packaging, total
   };
 
   const updateBtn = document.getElementById('updateBtn');
